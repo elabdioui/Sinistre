@@ -1,16 +1,13 @@
-package com.pfa.sinistre;
+package com.pfa.service_sinistre;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class SinistreApplication {
+public class ServiceSinistreApplication {
 
 	public static void main(String[] args) {
-
-		SpringApplication.run(SinistreApplication.class, args);
-
-		System.out.println("Haitham");
+		SpringApplication.run(ServiceSinistreApplication.class, args);
 	}
 
 }

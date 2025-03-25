@@ -1,10 +1,10 @@
-package com.pfa.sinistre;
+package com.pfa.Discovery;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class SinistreApplicationTests {
+class DiscoveryApplicationTests {
 
 	@Test
 	void contextLoads() {
