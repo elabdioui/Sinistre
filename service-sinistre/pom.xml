@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.pfa</groupId>
-	<artifactId>service-admin</artifactId>
+	<artifactId>service-sinistre</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>service-admin</name>
+	<name>service-sinistre</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>
