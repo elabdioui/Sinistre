@@ -1,93 +1,148 @@
 package com.pfa.authentification.controller;
 
-import com.pfa.authentification.config.JwtUtils;
-import com.pfa.authentification.entity.User;
-import com.pfa.authentification.dto.LoginRequest;
 import com.pfa.authentification.dto.AuthResponse;
-import com.pfa.authentification.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.pfa.authentification.dto.LoginRequest;
+import com.pfa.authentification.dto.RegisterRequest;
+import com.pfa.authentification.entity.User;
+import com.pfa.authentification.service.AuthService;
+import com.pfa.authentification.service.JwtService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
+@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final AuthService authService;
+    private final JwtService jwtService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtUtils jwtUtils;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody User user) {
-        if (userRepository.existsByUsername(user.getUsername())) {
-            return ResponseEntity.badRequest()
-                    .body(new AuthResponse(null, null, null, "Username déjà utilisé"));
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        try {
+            User user = authService.register(request);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Utilisateur créé avec succès");
+            response.put("username", user.getUsername());
+            response.put("email", user.getEmail());
+            response.put("role", user.getRole());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
         }
-
-        if (userRepository.existsByEmail(user.getEmail())) {
-            return ResponseEntity.badRequest()
-                    .body(new AuthResponse(null, null, null, "Email déjà utilisé"));
-        }
-
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        User savedUser = userRepository.save(user);
-
-        String token = jwtUtils.generateToken(savedUser.getUsername(), savedUser.getRole().toString());
-
-        return ResponseEntity.ok(new AuthResponse(
-                token,
-                savedUser.getUsername(),
-                savedUser.getRole().toString(),
-                "Inscription réussie"
-        ));
     }
+
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
-        Optional<User> userOpt = userRepository.findByUsername(loginRequest.getUsername());
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            User user = authService.authenticate(request.getUsername(), request.getPassword());
+            String token = jwtService.generateToken(user);
 
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(new AuthResponse(null, null, null, "Utilisateur introuvable"));
+            AuthResponse response = AuthResponse.builder()
+                    .token(token)
+                    .username(user.getUsername())
+                    .email(user.getEmail())
+                    .role(user.getRole().name())
+                    .message("Connexion réussie")
+                    .build();
+
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
-
-        User user = userOpt.get();
-
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            return ResponseEntity.badRequest()
-                    .body(new AuthResponse(null, null, null, "Mot de passe incorrect"));
-        }
-
-        String token = jwtUtils.generateToken(user.getUsername(), user.getRole().toString());
-
-        return ResponseEntity.ok(new AuthResponse(
-                token,
-                user.getUsername(),
-                user.getRole().toString(),
-                "Connexion réussie"
-        ));
     }
+
 
     @GetMapping("/validate")
-    public ResponseEntity<String> validateToken(@RequestHeader("Authorization") String token) {
-        token = token.replace("Bearer ", "");
-        if (jwtUtils.validateToken(token)) {
-            String username = jwtUtils.extractUsername(token);
-            return ResponseEntity.ok("Token valide pour " + username);
+    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String authHeader) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("valid", false, "error", "Token manquant ou invalide"));
+            }
+
+            String token = authHeader.substring(7);
+            String username = jwtService.extractUsername(token);
+
+            if (username != null && jwtService.isTokenValid(token)) {
+                User user = authService.findByUsername(username);
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("valid", true);
+                response.put("username", user.getUsername());
+                response.put("role", user.getRole());
+
+                return ResponseEntity.ok(response);
+            }
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("valid", false, "error", "Token invalide ou expiré"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("valid", false, "error", e.getMessage()));
         }
-        return ResponseEntity.badRequest().body("Token invalide");
     }
-    @GetMapping("/user")
-    public User getUserById(@RequestParam Long id) {
-        return userRepository.findById(id).orElse(null);
+
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Déconnexion réussie");
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * GET /auth/me
+     * Récupérer les informations de l'utilisateur connecté
+     */
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Token manquant"));
+            }
+
+            String token = authHeader.substring(7);
+            String username = jwtService.extractUsername(token);
+
+            if (username != null && jwtService.isTokenValid(token)) {
+                User user = authService.findByUsername(username);
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("id", user.getId());
+                response.put("username", user.getUsername());
+                response.put("email", user.getEmail());
+                response.put("role", user.getRole());
+
+                return ResponseEntity.ok(response);
+            }
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Token invalide"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("Service Authentification is running");
     }
 }

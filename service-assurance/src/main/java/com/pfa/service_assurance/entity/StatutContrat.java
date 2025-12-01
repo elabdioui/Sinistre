@@ -1,5 +1,5 @@
 package com.pfa.service_assurance.entity;
 
-public enum ContractStatus {
+public enum StatutContrat  {
     ACTIVE, EXPIRED, CANCELED
 }

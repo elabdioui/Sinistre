@@ -1,11 +1,12 @@
 package com.pfa.service_assurance.controller;
 
 import com.pfa.service_assurance.DTO.ClientDTO;
-import com.pfa.service_assurance.entity.Contract;
+import com.pfa.service_assurance.entity.Contrat;
 
-import com.pfa.service_assurance.entity.ContractStatus;
-import com.pfa.service_assurance.repository.ContractRepository;
+import com.pfa.service_assurance.entity.StatutContrat;
 
+
+import com.pfa.service_assurance.repository.ContratRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ import java.util.List;
 public class ContractController {
 
     @Autowired
-    private ContractRepository repository;
+    private ContratRepository repository;
 
     @Autowired
     RestTemplate restTemplate;
@@ -28,7 +29,7 @@ public class ContractController {
     private static final String SERVICE_AUTH_URL = API_GATEWAY + "/auth";
 
     @PostMapping("/create")
-    public ResponseEntity<?> create(@RequestBody Contract c) {
+    public ResponseEntity<?> create(@RequestBody Contrat c) {
         c.setId(null); // on ignore l'id envoyé par le client
         return ResponseEntity.ok(repository.save(c));
     }
@@ -36,27 +37,27 @@ public class ContractController {
 
 
     @GetMapping()
-    public List<Contract> getAll() {
+    public List<Contrat> getAll() {
         return repository.findAll();
     }
 
 
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<?> cancel(@PathVariable Long id) {
-        Contract contract = repository.findById(id).orElseThrow(() -> new RuntimeException("Contract not found"));
+        Contrat contract = repository.findById(id).orElseThrow(() -> new RuntimeException("Contract not found"));
         contract.setStatus(ContractStatus.CANCELED);
         repository.save(contract);
         return ResponseEntity.ok("Contract cancelled successfully");
     }
 
     @GetMapping("/client/{clientId}")
-    public List<Contract> getSinistresByClientId(@PathVariable Long clientId) {
-        List<Contract> contracts = repository.findByClientId(clientId);
+    public List<Contrat> getSinistresByClientId(@PathVariable Long clientId) {
+        List<Contrat> contracts = repository.findByClientId(clientId);
         contracts.forEach(this::enrichirAvecDonneesClient);
         return contracts;
     }
 
-    private void enrichirAvecDonneesClient(Contract contract) {
+    private void enrichirAvecDonneesClient(Contrat contract) {
         try {
             String url = SERVICE_AUTH_URL  + contract.getClientId();
             ClientDTO client = restTemplate.getForObject(url, ClientDTO.class);
