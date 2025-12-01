@@ -38,7 +38,7 @@ public class Contrat {
     @Column(name = "client_id", nullable = false)
     private Long clientId;
 
-    // Champ pour stocker le nom du client (récupéré via relation ou REST)
+
     @Transient
     private String clientNom;
 
@@ -49,18 +49,14 @@ public class Contrat {
     @Column(length = 20)
     private StatutContrat statut = StatutContrat.ACTIVE;
 
-    /**
-     * Vérifier si le contrat est valide à une date donnée
-     */
+
     public boolean isValideAujourdhui() {
         LocalDate today = LocalDate.now();
         return !today.isBefore(dateDebut) && !today.isAfter(dateFin)
                 && statut == StatutContrat.ACTIVE;
     }
 
-    /**
-     * Vérifier si le contrat est expiré
-     */
+
     public boolean isExpire() {
         return LocalDate.now().isAfter(dateFin);
     }

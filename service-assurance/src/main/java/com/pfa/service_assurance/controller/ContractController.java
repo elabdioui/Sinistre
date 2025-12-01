@@ -45,7 +45,7 @@ public class ContractController {
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<?> cancel(@PathVariable Long id) {
         Contrat contract = repository.findById(id).orElseThrow(() -> new RuntimeException("Contract not found"));
-        contract.setStatus(ContractStatus.CANCELED);
+        contract.setStatut(StatutContrat.CANCELED);
         repository.save(contract);
         return ResponseEntity.ok("Contract cancelled successfully");
     }

@@ -50,10 +50,7 @@ public class SinistreController {
         sinistre.setNumeroSinistre("SIN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         sinistre.setStatut(StatutSinistre.DECLARE);
 
-        // Vérifier que le client existe avant de créer le sinistre
-        if (!clientExists(sinistre.getClientId())) {
-            throw new RuntimeException("Client introuvable avec l'ID: " + sinistre.getClientId());
-        }
+
 
         Sinistre savedSinistre = sinistreRepository.save(sinistre);
         enrichirAvecDonneesClient(savedSinistre);
