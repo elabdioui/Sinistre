@@ -16,7 +16,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/contracts")
-@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 public class ContractController {
 
     @Autowired
@@ -25,7 +24,7 @@ public class ContractController {
     @Autowired
     RestTemplate restTemplate;
 
-    private static final String API_GATEWAY = "http://192.168.100.1:8080";
+    private static final String API_GATEWAY = "http://localhost:8080";
     private static final String SERVICE_AUTH_URL = API_GATEWAY + "/auth";
 
     @PostMapping("/create")

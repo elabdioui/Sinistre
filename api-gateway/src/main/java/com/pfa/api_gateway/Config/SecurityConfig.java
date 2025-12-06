@@ -1,4 +1,4 @@
-package Config;
+package com.pfa.api_gateway.Config ; // 👈 adapte EXACTEMENT au package de ton app
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,9 +13,9 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         return http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable())  // 🔹 pas de CSRF
                 .authorizeExchange(exchanges -> exchanges
-                        .anyExchange().permitAll()
+                        .anyExchange().permitAll() // 🔹 tout est autorisé au niveau gateway pour l’instant
                 )
                 .build();
     }

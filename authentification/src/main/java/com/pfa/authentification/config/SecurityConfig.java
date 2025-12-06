@@ -27,12 +27,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // ❌ On enlève cors() ici, c'est géré par le Gateway
                 .csrf(csrf -> csrf.disable()) // Désactiver CSRF pour les APIs REST
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints publics
                         .requestMatchers(
                                 "/auth/register",
                                 "/auth/login",
@@ -41,12 +40,12 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
-                        // Tous les autres endpoints nécessitent une authentification
                         .anyRequest().authenticated()
                 );
 
         return http.build();
     }
+
 
     /**
      * Configuration CORS

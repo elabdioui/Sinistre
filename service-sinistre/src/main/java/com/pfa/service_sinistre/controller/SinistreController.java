@@ -13,7 +13,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/sinistres")
-@CrossOrigin(origins = "*")
 public class SinistreController {
 
     @Autowired
@@ -23,7 +22,7 @@ public class SinistreController {
     private RestTemplate restTemplate;
 
     // URL du service assurance
-    private static final String API_GATEWAY = "http://192.168.100.1:8080";
+    private static final String API_GATEWAY = "http://localhost:8080";
     private static final String SERVICE_AUTH_URL = API_GATEWAY + "/auth";
 
     @GetMapping
