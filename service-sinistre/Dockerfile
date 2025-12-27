@@ -1,32 +1,18 @@
-# Dockerfile pour Service Sinistre
-FROM maven:3.9.5-eclipse-temurin-17 AS builder
-
-WORKDIR /app
-
-# Copier les fichiers Maven
+FROM eclipse-temurin:17-jdk-alpine AS builder
+WORKDIR /build
 COPY pom.xml .
+COPY .mvn .mvn
+COPY mvnw .
+RUN chmod +x mvnw && ./mvnw dependency:go-offline
 COPY src ./src
+RUN ./mvnw clean package -DskipTests
 
-# Build l'application
-RUN mvn clean package -DskipTests
-
-# Stage de production
 FROM eclipse-temurin:17-jre-alpine
-
 WORKDIR /app
-
-# Copier le JAR depuis le builder
-COPY --from=builder /app/target/*.jar app.jar
-
-# Exposer le port
-EXPOSE 8093
-
-# Variables d'environnement
-ENV JAVA_OPTS="-Xmx512m -Xms256m"
-ENV EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://eureka-server:8761/eureka/"
-ENV SPRING_DATASOURCE_URL="jdbc:postgresql://postgres-sinistre:5432/service_sinistre"
+COPY --from=builder /build/target/*.jar app.jar
+EXPOSE 8094
+ENV EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://discovery:8761/eureka/"
+ENV SPRING_DATASOURCE_URL="jdbc:postgresql://postgres:5432/service_sinistre"
 ENV SPRING_DATASOURCE_USERNAME="postgres"
-ENV SPRING_DATASOURCE_PASSWORD="postgres"
-
-# Lancer l'application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENV SPRING_DATASOURCE_PASSWORD="0000"
+ENTRYPOINT ["java", "-jar", "app.jar"]

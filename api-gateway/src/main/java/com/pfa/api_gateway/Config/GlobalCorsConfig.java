@@ -1,4 +1,4 @@
-package com.pfa.api_gateway.Config ; // 👈 adapte EXACTEMENT au package de ton app
+package com.pfa.api_gateway.Config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,8 +19,14 @@ public class GlobalCorsConfig {
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Pour être propre, mets l'origine d’Angular :
-        config.setAllowedOrigins(List.of("http://localhost:4200", "http://127.0.0.1:4200"));
+        // Toutes les origines possibles du frontend
+        config.setAllowedOrigins(Arrays.asList(
+                "http://localhost:4200",      // Angular dev
+                "http://127.0.0.1:4200",      // Angular dev (autre forme)
+                "http://localhost",           // Frontend Docker (port 80)
+                "http://localhost:80"         // Frontend Docker (explicite)
+        ));
+
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

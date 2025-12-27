@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discovery
+  namespace: insurance
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: discovery
+  template:
+    metadata:
+      labels:
+        app: discovery
+    spec:
+      containers:
+      - name: discovery
+        image: 005783449450.dkr.ecr.us-east-1.amazonaws.com/sinistre/discovery:latest
+        ports:
+        - containerPort: 8761
+        env:
+        - name: SPRING_APPLICATION_NAME
+          value: "discovery-server"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery
+  namespace: insurance
+spec:
+  selector:
+    app: discovery
+  ports:
+  - port: 8761
+    targetPort: 8761
+    nodePort: 30761
+  type: NodePort
