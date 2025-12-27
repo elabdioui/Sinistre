@@ -1,0 +1,145 @@
+services:
+  # ==============================================
+  # PostgreSQL Database
+  # ==============================================
+  postgres:
+    image: postgres:15
+    container_name: postgres-gestion-sinistres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "0000"
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - microservices-network
+
+  # ==============================================
+  # Discovery Service (Eureka Server)
+  # ==============================================
+  discovery:
+    build:
+      context: ./Discovery
+      dockerfile: Dockerfile
+    container_name: discovery-service
+    ports:
+      - "8761:8761"
+    networks:
+      - microservices-network
+    restart: always
+
+  # ==============================================
+  # Service Authentification
+  # ==============================================
+  authentification:
+    build:
+      context: ./authentification
+      dockerfile: Dockerfile
+    container_name: service-authentification
+    ports:
+      - "8091:8091"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/authentification
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery:8761/eureka/
+    networks:
+      - microservices-network
+    depends_on:
+      - postgres
+      - discovery
+    restart: always
+
+  # ==============================================
+  # Service Assurance
+  # ==============================================
+  service-assurance:
+    build:
+      context: ./service-assurance
+      dockerfile: Dockerfile
+    container_name: service-assurance
+    ports:
+      - "8093:8093"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/service_assurance
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery:8761/eureka/
+    networks:
+      - microservices-network
+    depends_on:
+      - postgres
+      - discovery
+    restart: always
+
+  # ==============================================
+  # Service Sinistre
+  # ==============================================
+  service-sinistre:
+    build:
+      context: ./service-sinistre
+      dockerfile: Dockerfile
+    container_name: service-sinistre
+    ports:
+      - "8094:8094"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/service_sinistre
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery:8761/eureka/
+    networks:
+      - microservices-network
+    depends_on:
+      - postgres
+      - discovery
+      - service-assurance
+    restart: always
+
+  # ==============================================
+  # Service Admin
+  # ==============================================
+  service-admin:
+    build:
+      context: ./service-admin
+      dockerfile: Dockerfile
+    container_name: service-admin
+    ports:
+      - "8092:8092"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/service_admin
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery:8761/eureka/
+    networks:
+      - microservices-network
+    depends_on:
+      - postgres
+      - discovery
+    restart: always
+
+  # ==============================================
+  # API Gateway
+  # ==============================================
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery:8761/eureka/
+    networks:
+      - microservices-network
+    depends_on:
+      - discovery
+      - authentification
+      - service-assurance
+      - service-sinistre
+      - service-admin
+    restart: always
+
+# ==============================================
+# Networks & Volumes
+# ==============================================
+networks:
+  microservices-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

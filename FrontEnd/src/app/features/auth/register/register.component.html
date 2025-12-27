@@ -1,0 +1,132 @@
+  <div class="auth-page">
+  <div class="auth-container">
+
+    <!-- GAUCHE : LOGO + FORMULAIRE INSCRIPTION -->
+    <div class="auth-left">
+      <!-- Logo -->
+      <div class="brand-block">
+        <div class="brand-logo">
+          <span class="brand-mark">S</span>
+          <div class="brand-text">
+            <span class="brand-name">SINISTRE MANAGER</span>
+            <span class="brand-subtitle">GESTION DES SINISTRES</span>
+          </div>
+        </div>
+
+        <h1 class="page-title">Créer un compte</h1>
+        <p class="page-subtitle">
+          Inscrivez-vous pour accéder à votre espace de gestion des sinistres.
+        </p>
+      </div>
+
+      <!-- Formulaire d'inscription -->
+      <form (ngSubmit)="onSubmit()" class="login-form register-form">
+        <!-- Nom d'utilisateur -->
+        <div class="form-group">
+          <label for="username">Nom d'utilisateur</label>
+          <div class="input-wrapper">
+            <input
+              id="username"
+              type="text"
+              [(ngModel)]="user.username"
+              name="username"
+              placeholder="Entrez votre nom d'utilisateur"
+              required
+            />
+            <span class="field-icon">👤</span>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email">Adresse email</label>
+          <div class="input-wrapper">
+            <input
+              id="email"
+              type="email"
+              [(ngModel)]="user.email"
+              name="email"
+              placeholder="Entrez votre email"
+              required
+            />
+            <span class="field-icon">📧</span>
+          </div>
+        </div>
+
+        <!-- Mot de passe -->
+        <div class="form-group">
+          <label for="password">Mot de passe</label>
+          <div class="input-wrapper">
+            <input
+              id="password"
+              type="password"
+              [(ngModel)]="user.password"
+              name="password"
+              placeholder="Choisissez un mot de passe"
+              required
+            />
+            <span class="field-icon">🔒</span>
+          </div>
+        </div>
+
+        <!-- (Optionnel) Confirmation de mot de passe -->
+        <!--
+        <div class="form-group">
+          <label for="confirmPassword">Confirmer le mot de passe</label>
+          <div class="input-wrapper">
+            <input
+              id="confirmPassword"
+              type="password"
+              [(ngModel)]="user.confirmPassword"
+              name="confirmPassword"
+              placeholder="Confirmez votre mot de passe"
+              required
+            />
+            <span class="field-icon">✅</span>
+          </div>
+        </div>
+        -->
+
+        <!-- Bouton -->
+        <button type="submit" class="btn-primary btn-register">
+          S'inscrire
+        </button>
+      </form>
+
+      <!-- Message de feedback -->
+      <p
+        *ngIf="message"
+        [ngClass]="{ 'success-msg': !isError, 'error-msg': isError }"
+        class="feedback-message"
+      >
+        {{ message }}
+      </p>
+
+      <!-- Liens -->
+      <div class="login-footer-links">
+        <p>
+          Vous avez déjà un compte ?
+          <a routerLink="/login">Se connecter</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- DROITE : MÊME IMAGE / CARTE QUE LOGIN -->
+    <div class="auth-right">
+      <div class="visual-card">
+        <div class="visual-image"></div>
+        <div class="visual-text">
+          <h2>
+            Suivez vos contrats & sinistres<br />
+            en toute transparence.
+          </h2>
+          <p>
+            Créez un compte pour centraliser vos contrats d’assurance,
+            déclarer vos sinistres et suivre vos indemnisations facilement.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

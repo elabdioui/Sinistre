@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: lb://service-authentification
+          predicates:
+            - Path=/auth/**
+        - id: assurance-service
+          uri: lb://service-assurance
+          predicates:
+            - Path=/clients/**
+        - id: sinistre-service
+          uri: lb://service-sinistre
+          predicates:
+            - Path=/sinistres/**
+        - id: admin-service
+          uri: lb://service-admin.yml
+          predicates:
+            - Path=/admin/**
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"

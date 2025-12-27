@@ -1,0 +1,84 @@
+<!-- src/app/components/navbar/navbar.component.html -->
+
+<nav class="navbar" *ngIf="isLoggedIn">
+  <div class="nav-container">
+    <!-- LOGO -->
+    <div class="nav-brand" routerLink="/admin/dashboard">
+      <div class="brand-icon">S</div>
+      <div class="brand-text">
+        <span class="brand-name">SINISTRE MANAGER</span>
+        <span class="brand-tagline">Admin Panel</span>
+      </div>
+    </div>
+
+    <!-- HAMBURGER MENU (Mobile) -->
+    <button class="hamburger" (click)="toggleMenu()" [class.active]="isMenuOpen">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <!-- NAVIGATION LINKS -->
+    <div class="nav-links" [class.active]="isMenuOpen">
+      <a
+        routerLink="/admin/dashboard"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="closeMenu()"
+        class="nav-link"
+      >
+        <span class="link-icon">🏠</span>
+        <span class="link-text">Dashboard</span>
+      </a>
+
+      <a
+        routerLink="/admin/contracts"
+        routerLinkActive="active"
+        (click)="closeMenu()"
+        class="nav-link"
+      >
+        <span class="link-icon">📑</span>
+        <span class="link-text">Contrats</span>
+      </a>
+
+      <a
+        routerLink="/admin/sinistres"
+        routerLinkActive="active"
+        (click)="closeMenu()"
+        class="nav-link"
+      >
+        <span class="link-icon">⚠️</span>
+        <span class="link-text">Sinistres</span>
+      </a>
+
+      <a
+        routerLink="/admin/health"
+        routerLinkActive="active"
+        (click)="closeMenu()"
+        class="nav-link"
+        title="Vérifier l'état des services backend"
+      >
+        <span class="link-icon">🏥</span>
+        <span class="link-text">Health</span>
+      </a>
+
+      <a
+        routerLink="/sinistres/create"
+        routerLinkActive="active"
+        (click)="closeMenu()"
+        class="nav-link nav-link-primary"
+      >
+        <span class="link-icon">➕</span>
+        <span class="link-text">Nouveau Sinistre</span>
+      </a>
+    </div>
+
+    <!-- USER MENU -->
+    <div class="nav-actions">
+      <button class="btn-logout" (click)="logout()">
+        <span class="logout-icon">🚪</span>
+        <span class="logout-text">Déconnexion</span>
+      </button>
+    </div>
+  </div>
+</nav>

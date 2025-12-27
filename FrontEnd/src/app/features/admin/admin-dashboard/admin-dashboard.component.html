@@ -1,0 +1,273 @@
+<!-- src/app/admin-dashboard/admin-dashboard.component.html -->
+
+<div class="dashboard-container">
+  <!-- HEADER -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="header-title">
+        <h1>Tableau de Bord</h1>
+        <p class="subtitle">Vue d'ensemble de vos contrats d'assurance</p>
+      </div>
+      <button type="button" class="btn-refresh" (click)="loadContracts()">
+        <span class="icon">🔄</span>
+        <span>Actualiser</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- STATS CARDS -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon">📊</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ totalContracts }}</div>
+        <div class="stat-label">Total Contrats</div>
+      </div>
+    </div>
+
+    <div class="stat-card stat-active">
+      <div class="stat-icon">✅</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ activeContracts }}</div>
+        <div class="stat-label">Actifs</div>
+      </div>
+    </div>
+
+    <div class="stat-card stat-canceled">
+      <div class="stat-icon">❌</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ canceledContracts }}</div>
+        <div class="stat-label">Annulés</div>
+      </div>
+    </div>
+
+    <div class="stat-card stat-expired">
+      <div class="stat-icon">⏰</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ expiredContracts }}</div>
+        <div class="stat-label">Expirés</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-grid">
+    <!-- FORMULAIRE DE CRÉATION -->
+    <div class="form-card">
+      <div class="card-header">
+        <h2>➕ Créer un nouveau contrat</h2>
+        <p>Renseignez les informations du contrat</p>
+      </div>
+
+      <div class="card-body">
+              <form
+                class="form-grid"
+                (ngSubmit)="createContract()"
+                autocomplete="off"
+              >
+                <div class="field">
+                  <label>Client *</label>
+                  <select
+  [(ngModel)]="newContract.clientId"
+  name="clientId"
+  required
+  [disabled]="loadingClients"
+>
+  <option [ngValue]="0" disabled>
+    {{ loadingClients ? 'Chargement des clients...' : 'Sélectionnez un client' }}
+  </option>
+  <option *ngFor="let client of clients" [ngValue]="client.id">
+    {{ getClientFullName(client) }} - {{ client.email }}
+  </option>
+</select>
+                </div>
+
+                <div class="field">
+                  <label>Type de contrat *</label>
+                  <select
+                    [(ngModel)]="newContract.type"
+                    name="type"
+                    required
+                  >
+                    <option [value]="TypeContrat.AUTO">🚗 Automobile</option>
+                    <option [value]="TypeContrat.HABITATION">🏠 Habitation</option>
+                    <option [value]="TypeContrat.SANTE">❤️ Santé</option>
+                    <option [value]="TypeContrat.VIE">💼 Vie</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label>Prime annuelle (DH) *</label>
+                  <input
+                    type="number"
+                    [(ngModel)]="newContract.primeAnnuelle"
+                    name="primeAnnuelle"
+                    required
+                  />
+                </div>
+
+                <div class="field">
+                  <label>Début du contrat *</label>
+                  <input
+                    type="date"
+                    [(ngModel)]="newContract.dateDebut"
+                    name="dateDebut"
+                    required
+                  />
+                </div>
+
+                <div class="field">
+                  <label>Fin du contrat *</label>
+                  <input
+                    type="date"
+                    [(ngModel)]="newContract.dateFin"
+                    name="dateFin"
+                    required
+                  />
+                </div>
+
+                <div class="form-footer">
+                  <button
+                    class="btn-primary"
+                    type="submit"
+                    [disabled]="creating"
+                  >
+                    {{ creating ? 'Création...' : 'Créer le contrat' }}
+                  </button>
+
+                  <span class="hint">
+                    Tous les champs marqués * sont obligatoires.
+                  </span>
+                </div>
+
+                <div *ngIf="createError" class="state state--error">
+                  {{ createError }}
+                </div>
+              </form>
+            </div>
+          </div>
+
+    <!-- LISTE DES CONTRATS -->
+    <div class="list-card">
+      <div class="card-header">
+        <h2>📋 Contrats existants</h2>
+        <p>Suivi en temps réel de vos contrats</p>
+      </div>
+
+      <div class="card-body">
+              <div *ngIf="loading" class="state state--info">
+                Chargement des contrats...
+              </div>
+
+              <div *ngIf="error && !loading" class="state state--error">
+                {{ error }}
+              </div>
+
+              <div
+                *ngIf="
+                  !loading && !error && contracts && contracts.length === 0
+                "
+                class="empty-inline"
+              >
+                Aucun contrat pour le moment. Créez votre premier contrat à gauche.
+              </div>
+
+              <div
+                *ngIf="
+                  !loading && !error && contracts && contracts.length > 0
+                "
+                class="mini-table-wrapper"
+              >
+                <table class="mini-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Client</th>
+                      <th>Type</th>
+                      <th>Prime</th>
+                      <th>Statut</th>
+                      <th class="col-actions">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let c of contracts">
+                      <td>#{{ c.id }}</td>
+                      <td>Client {{ c.clientId }}</td>
+                      <td>{{ c.type }}</td>
+                      <td>{{ c.primeAnnuelle | number: '1.0-0' }} DH</td>
+                      <td>
+                        <span
+                          class="status-pill"
+                          [ngClass]="{
+                            'status-pill--active':
+                              c.statut === contractStatusEnum.ACTIVE,
+                            'status-pill--canceled':
+                              c.statut === contractStatusEnum.CANCELED,
+                            'status-pill--expired':
+                              c.statut === contractStatusEnum.EXPIRED
+                          }"
+                        >
+                          {{ c.statut || 'N/A' }}
+                        </span>
+                      </td>
+                      <td class="col-actions">
+                        <button
+                          type="button"
+                          class="btn-outline"
+                          (click)="cancelContract(c)"
+                          [disabled]="c.statut === contractStatusEnum.CANCELED"
+                        >
+                          Annuler
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+  </div>
+
+  <!-- SECTION DES GRAPHIQUES -->
+  <div class="charts-section">
+    <div class="section-header">
+      <h2>📊 Statistiques visuelles</h2>
+      <p>Analyse détaillée de vos contrats</p>
+    </div>
+
+    <div class="charts-grid">
+      <!-- Graphique 1: Contrats par type (Bar Chart) -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Contrats par type</h3>
+          <p>Répartition des contrats selon leur catégorie</p>
+        </div>
+        <div class="chart-body">
+          <canvas #contractsByTypeChart></canvas>
+        </div>
+      </div>
+
+      <!-- Graphique 2: Contrats par statut (Doughnut Chart) -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Contrats par statut</h3>
+          <p>Distribution selon l'état actuel</p>
+        </div>
+        <div class="chart-body">
+          <canvas #contractsByStatusChart></canvas>
+        </div>
+      </div>
+
+      <!-- Graphique 3: Primes moyennes par type (Line Chart) -->
+      <div class="chart-card chart-card--wide">
+        <div class="chart-header">
+          <h3>Primes annuelles moyennes</h3>
+          <p>Comparaison des primes moyennes par type de contrat</p>
+        </div>
+        <div class="chart-body">
+          <canvas #premiumDistributionChart></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

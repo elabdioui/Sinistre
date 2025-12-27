@@ -1,0 +1,288 @@
+<!-- src/app/features/sinistres-list/sinistres-list.component.html -->
+
+<div class="container">
+  <!-- En-tête avec statistiques -->
+  <div class="header">
+    <h1>📋 Gestion des Sinistres</h1>
+
+    <div class="stats-grid">
+      <div class="stat-card stat-total">
+        <div class="stat-value">{{ stats.total }}</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-card stat-declare">
+        <div class="stat-value">{{ stats.declare }}</div>
+        <div class="stat-label">Déclarés</div>
+      </div>
+      <div class="stat-card stat-encours">
+        <div class="stat-value">{{ stats.enCours }}</div>
+        <div class="stat-label">En cours</div>
+      </div>
+      <div class="stat-card stat-valide">
+        <div class="stat-value">{{ stats.valide }}</div>
+        <div class="stat-label">Validés</div>
+      </div>
+      <div class="stat-card stat-rejete">
+        <div class="stat-value">{{ stats.rejete }}</div>
+        <div class="stat-label">Rejetés</div>
+      </div>
+      <div class="stat-card stat-indemnise">
+        <div class="stat-value">{{ stats.indemnise }}</div>
+        <div class="stat-label">Indemnisés</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barre d'actions et filtres -->
+  <div class="actions-bar">
+    <a routerLink="/sinistres/create" class="btn btn-primary">
+      ➕ Nouveau Sinistre
+    </a>
+
+    <div class="filters">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="🔍 Rechercher (numéro, description, client...)"
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearchChange()"
+      />
+
+      <select
+        class="status-filter"
+        [(ngModel)]="selectedStatus"
+        (ngModelChange)="onStatusChange()"
+      >
+        <option *ngFor="let option of statusOptions" [value]="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="error" class="alert alert-danger">
+    <strong>❌ Erreur:</strong> {{ error }}
+    <button class="btn-retry" (click)="loadSinistres()">🔄 Réessayer</button>
+  </div>
+
+  <!-- Chargement -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner-large"></div>
+    <p>Chargement des sinistres...</p>
+  </div>
+
+  <!-- Aucun résultat -->
+  <div *ngIf="!loading && filteredSinistres.length === 0 && !error" class="no-results">
+    <div class="no-results-icon">📭</div>
+    <h3>Aucun sinistre trouvé</h3>
+    <p *ngIf="searchTerm || selectedStatus !== 'ALL'">
+      Essayez de modifier vos critères de recherche
+    </p>
+    <p *ngIf="!searchTerm && selectedStatus === 'ALL'">
+      Commencez par déclarer votre premier sinistre
+    </p>
+    <a routerLink="/sinistres/create" class="btn btn-primary">
+      Déclarer un sinistre
+    </a>
+  </div>
+
+  <!-- Liste des sinistres -->
+  <div *ngIf="!loading && filteredSinistres.length > 0" class="sinistres-grid">
+    <div *ngFor="let sinistre of filteredSinistres" class="sinistre-card">
+      <!-- En-tête de la carte -->
+      <div class="card-header">
+        <div>
+          <h3>{{ sinistre.numeroSinistre || '#' + sinistre.id }}</h3>
+          <span [class]="'status-badge ' + getStatusClass(sinistre.statut)">
+            {{ getStatusLabel(sinistre.statut) }}
+          </span>
+        </div>
+        <div class="card-actions">
+          <button class="btn-icon" title="Modifier" disabled>✏️</button>
+          <button class="btn-icon btn-danger" (click)="deleteSinistre(sinistre)" title="Supprimer">
+            🗑️
+          </button>
+        </div>
+      </div>
+
+      <!-- Corps de la carte -->
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-label">👤 Client:</span>
+          <span class="info-value">{{ sinistre.clientNom || 'Non renseigné' }}</span>
+        </div>
+        <!-- ✅ Gestionnaire assigné -->
+        <div class="info-row gestionnaire-row" *ngIf="sinistre.gestionnaireId">
+          <span class="info-label">👨‍💼 Traité par:</span>
+          <span class="info-value gestionnaire-info">
+            <span class="gestionnaire-name">{{ sinistre.gestionnaireNom || 'Gestionnaire #' + sinistre.gestionnaireId }}</span>
+            <small class="gestionnaire-email" *ngIf="sinistre.gestionnaireEmail && sinistre.gestionnaireEmail !== 'N/A'">
+              ({{ sinistre.gestionnaireEmail }})
+            </small>
+          </span>
+        </div>
+        <div class="info-row" *ngIf="!sinistre.gestionnaireId && sinistre.statut !== 'DECLARE'">
+          <span class="info-label">👨‍💼 Traité par:</span>
+          <span class="info-value non-assigne">⚠️ Non assigné</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">📧 Email:</span>
+          <span class="info-value">{{ sinistre.clientEmail || 'N/A' }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">📅 Date:</span>
+          <span class="info-value">{{ formatDate(sinistre.dateDeclaration) }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">💰 Montant:</span>
+          <span class="info-value montant">{{ formatMontant(sinistre.montantDemande) }}</span>
+        </div>
+
+        <div class="description">
+          <span class="info-label">📝 Description:</span>
+          <p>{{ sinistre.description || 'Aucune description' }}</p>
+        </div>
+      </div>
+
+      <!-- Actions de changement de statut (GESTIONNAIRE uniquement) -->
+      <div class="card-footer" *ngIf="!isClient()">
+        <div class="status-actions">
+          <button
+            *ngIf="sinistre.statut === SinistreStatus.DECLARE"
+            class="btn btn-sm btn-info"
+            (click)="openGestionModal(sinistre, SinistreStatus.EN_COURS)"
+          >
+            ⏳ Prendre en charge
+          </button>
+
+          <button
+            *ngIf="sinistre.statut === SinistreStatus.EN_COURS"
+            class="btn btn-sm btn-success"
+            (click)="openGestionModal(sinistre, SinistreStatus.VALIDE)"
+          >
+            ✅ Valider
+          </button>
+
+          <button
+            *ngIf="sinistre.statut === SinistreStatus.EN_COURS"
+            class="btn btn-sm btn-danger"
+            (click)="openGestionModal(sinistre, SinistreStatus.REJETE)"
+          >
+            ❌ Rejeter
+          </button>
+
+          <button
+            *ngIf="sinistre.statut === SinistreStatus.VALIDE"
+            class="btn btn-sm btn-warning"
+            (click)="openGestionModal(sinistre, SinistreStatus.INDEMNISE)"
+          >
+            💰 Indemniser
+          </button>
+
+          <button
+            class="btn btn-sm btn-secondary"
+            (click)="openGestionModal(sinistre, sinistre.statut)"
+          >
+            ⚙️ Gérer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de gestion du sinistre -->
+<div class="modal-overlay" *ngIf="showGestionModal" (click)="closeGestionModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>⚙️ Gestion du Sinistre #{{ selectedSinistre?.numeroSinistre }}</h2>
+      <button class="btn-close" (click)="closeGestionModal()">✕</button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedSinistre">
+      <!-- Informations du sinistre -->
+      <div class="info-section">
+        <h3>📋 Informations</h3>
+        <div class="info-grid">
+          <div><strong>Client:</strong> {{ selectedSinistre.clientNom }}</div>
+          <div><strong>Contrat:</strong> #{{ selectedSinistre.contratId }}</div>
+          <div><strong>Date:</strong> {{ selectedSinistre.dateSinistre | date:'dd/MM/yyyy' }}</div>
+          <div><strong>Montant demandé:</strong> {{ formatMontant(selectedSinistre.montantDemande) }}</div>
+        </div>
+        <div class="description-box">
+          <strong>Description:</strong>
+          <p>{{ selectedSinistre.description }}</p>
+        </div>
+      </div>
+
+      <!-- Changement de statut -->
+      <div class="form-section">
+        <h3>🔄 Changement de Statut</h3>
+
+        <div class="form-group">
+          <label>Nouveau statut:</label>
+          <select [(ngModel)]="newStatut" class="form-control">
+            <option [value]="SinistreStatus.DECLARE">📝 Déclaré</option>
+            <option [value]="SinistreStatus.EN_COURS">⏳ En cours</option>
+            <option [value]="SinistreStatus.VALIDE">✅ Validé</option>
+            <option [value]="SinistreStatus.REJETE">❌ Rejeté</option>
+            <option [value]="SinistreStatus.INDEMNISE">💰 Indemnisé</option>
+          </select>
+        </div>
+
+        <!-- Montant approuvé (si validation ou indemnisation) -->
+        <div class="form-group" *ngIf="newStatut === SinistreStatus.VALIDE || newStatut === SinistreStatus.INDEMNISE">
+          <label>💰 Montant approuvé (€):</label>
+          <input
+            type="number"
+            [(ngModel)]="montantApprouve"
+            class="form-control"
+            [placeholder]="'Montant demandé: ' + selectedSinistre.montantDemande + ' €'"
+            min="0"
+            step="0.01"
+          />
+          <small class="form-hint">
+            Montant demandé: {{ formatMontant(selectedSinistre.montantDemande) }}
+          </small>
+        </div>
+
+        <!-- Note interne -->
+        <div class="form-group">
+          <label>📝 Note interne (optionnel):</label>
+          <textarea
+            [(ngModel)]="noteInterne"
+            class="form-control"
+            rows="3"
+            placeholder="Commentaire pour le suivi interne..."
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Historique (simulé) -->
+      <div class="info-section" *ngIf="selectedSinistre.gestionnaireId">
+        <h3>👤 Gestionnaire Assigné</h3>
+        <div class="info-grid">
+          <div><strong>Nom:</strong> {{ selectedSinistre.gestionnaireNom || 'Non assigné' }}</div>
+          <div><strong>Email:</strong> {{ selectedSinistre.gestionnaireEmail || 'N/A' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeGestionModal()">
+        Annuler
+      </button>
+      <button
+        class="btn btn-primary"
+        (click)="confirmStatutChange()"
+        [disabled]="processingStatut"
+      >
+        {{ processingStatut ? '⏳ En cours...' : '✅ Confirmer' }}
+      </button>
+    </div>
+  </div>
+</div>

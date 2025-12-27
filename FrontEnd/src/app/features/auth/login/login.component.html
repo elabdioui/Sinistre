@@ -1,0 +1,105 @@
+<div class="auth-page">
+  <div class="auth-container">
+
+    <!-- GAUCHE : LOGO + FORMULAIRE -->
+    <div class="auth-left">
+      <!-- Logo -->
+      <div class="brand-block">
+        <!-- Remplace par ton logo <img> si tu en as un -->
+        <div class="brand-logo">
+          <span class="brand-mark">S</span>
+          <div class="brand-text">
+            <span class="brand-name">SINISTRE MANAGER</span>
+            <span class="brand-subtitle">GESTION DES SINISTRES</span>
+          </div>
+        </div>
+
+        <h1 class="page-title">Se connecter</h1>
+      </div>
+
+      <!-- Formulaire -->
+      <form (ngSubmit)="onSubmit()" class="login-form">
+        <!-- Email / username -->
+        <div class="form-group">
+          <label for="username">Nom d'utilisateur</label>
+          <div class="input-wrapper">
+            <input
+              id="username"
+              type="text"
+              [(ngModel)]="credentials.username"
+              name="username"
+              placeholder="Entrez votre nom d'utilisateur"
+              required
+            />
+            <span class="field-icon">👤</span>
+          </div>
+        </div>
+
+        <!-- Mot de passe -->
+        <div class="form-group">
+          <label for="password">Mot de passe</label>
+          <div class="input-wrapper">
+            <input
+              id="password"
+              type="password"
+              [(ngModel)]="credentials.password"
+              name="password"
+              placeholder="Entrez votre mot de passe"
+              required
+            />
+            <span class="field-icon">🔒</span>
+          </div>
+        </div>
+
+        <!-- Souvenir de moi -->
+        <div class="form-row">
+          <label class="checkbox-label">
+            <input type="checkbox" />
+            <span>Se souvenir de moi</span>
+          </label>
+        </div>
+
+        <!-- Bouton -->
+        <button type="submit" class="btn-primary">
+          Connexion
+        </button>
+      </form>
+
+      <!-- Messages -->
+      <p
+        *ngIf="message"
+        [ngClass]="{ 'success-msg': !isError, 'error-msg': isError }"
+        class="feedback-message"
+      >
+        {{ message }}
+      </p>
+
+      <!-- Liens bas de page -->
+      <div class="login-footer-links">
+        <a href="javascript:void(0)">Mot de passe oublié ?</a>
+        <p>
+          Pas de compte ?
+          <a href="javascript:void(0)">S’inscrire</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- DROITE : CARTE IMAGE + TEXTE -->
+    <div class="auth-right">
+      <div class="visual-card">
+        <div class="visual-image"></div>
+        <div class="visual-text">
+          <h2>
+            Gérez vos sinistres en toute simplicité,<br />
+            depuis une seule plateforme.
+          </h2>
+          <p>
+            Centralisez les déclarations, suivez les dossiers et les
+            indemnisations en temps réel pour vos assurés.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

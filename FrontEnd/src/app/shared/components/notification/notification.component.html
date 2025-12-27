@@ -1,0 +1,23 @@
+<!-- src/app/shared/components/notification/notification.component.html -->
+
+<div class="notification-container">
+  <div
+    *ngFor="let notification of notifications"
+    [ngClass]="getNotificationClass(notification.type)"
+    [@slideIn]
+  >
+    <div class="notification-icon">
+      {{ getIcon(notification.type) }}
+    </div>
+    <div class="notification-content">
+      <p class="notification-message">{{ notification.message }}</p>
+    </div>
+    <button
+      class="notification-close"
+      (click)="close(notification.id)"
+      aria-label="Fermer la notification"
+    >
+      ×
+    </button>
+  </div>
+</div>

@@ -1,0 +1,125 @@
+<!-- src/app/features/create-sinistre/create-sinistre.component.html -->
+
+<div class="create-page">
+  <div class="create-container">
+    <!-- HEADER -->
+    <header class="form-header">
+      <h1>➕ Déclarer un Nouveau Sinistre</h1>
+      <p class="subtitle">Remplissez le formulaire ci-dessous</p>
+    </header>
+
+    <!-- SUCCESS MESSAGE -->
+    <div *ngIf="success" class="alert alert-success">
+      ✅ Sinistre créé avec succès ! Redirection en cours...
+    </div>
+
+    <!-- ERROR MESSAGE -->
+    <div *ngIf="error" class="alert alert-error">
+      ❌ {{ error }}
+    </div>
+
+    <!-- LOADING CONTRATS -->
+    <div *ngIf="loadingContrats" class="alert alert-info">
+      ⏳ Chargement de vos contrats...
+    </div>
+
+    <!-- FORMULAIRE -->
+    <form (ngSubmit)="onSubmit()" class="sinistre-form" *ngIf="!loadingContrats">
+
+      <!-- Sélection du Contrat -->
+      <div class="form-group full-width">
+        <label for="contratId">📄 Contrat *</label>
+        <select
+          id="contratId"
+          [(ngModel)]="sinistre.contratId"
+          name="contratId"
+          class="form-select"
+          required
+          [disabled]="contratsActifs.length === 0"
+        >
+          <option [value]="0">-- Sélectionnez un contrat --</option>
+          <option *ngFor="let contrat of contratsActifs" [value]="contrat.id">
+            {{ getContratLabel(contrat) }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Row: Montant + Date -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="montantDemande">💰 Montant Demandé (€) *</label>
+          <input
+            id="montantDemande"
+            type="number"
+            [(ngModel)]="sinistre.montantDemande"
+            name="montantDemande"
+            placeholder="Ex: 5000"
+            required
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="dateSinistre">📅 Date du Sinistre *</label>
+          <input
+            id="dateSinistre"
+            type="date"
+            [(ngModel)]="sinistre.dateSinistre"
+            name="dateSinistre"
+            required
+          />
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group full-width">
+        <label for="description">📝 Description du Sinistre *</label>
+        <textarea
+          id="description"
+          [(ngModel)]="sinistre.description"
+          name="description"
+          placeholder="Décrivez en détail les circonstances du sinistre (minimum 10 caractères)..."
+          rows="6"
+          required
+          minlength="10"
+        ></textarea>
+      </div>
+
+      <!-- BOUTONS -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="cancel()"
+          [disabled]="loading"
+        >
+          ❌ Annuler
+        </button>
+
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="loading"
+        >
+          <span *ngIf="!loading">✅ Créer le Sinistre</span>
+          <span *ngIf="loading">⏳ Création en cours...</span>
+        </button>
+      </div>
+    </form>
+
+    <!-- INFO BOX -->
+    <div class="info-box">
+      <span class="info-icon">💡</span>
+      <div class="info-content">
+        <strong>Informations importantes :</strong>
+        <ul>
+          <li>Tous les champs marqués d'un * sont obligatoires</li>
+          <li>L'ID client et l'ID contrat doivent exister dans la base de données</li>
+          <li>Le montant doit être un nombre positif</li>
+          <li>La description doit contenir au moins 10 caractères</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,48 @@
+# .dockerignore
+# Fichiers et dossiers à ignorer lors du build Docker
+
+# Builds et target
+target/
+build/
+out/
+
+# IDE
+.idea/
+.vscode/
+*.iws
+*.iml
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*
+
+# Logs
+*.log
+logs/
+
+# Test reports
+test-results/
+coverage/
+
+# Node modules (si applicable)
+node_modules/
+
+# Maven wrapper jar (on garde le script)
+.mvn/wrapper/maven-wrapper.jar
+
+# Documentation
+README.md
+*.md
+
+# Fichiers temporaires
+*.tmp
+*.temp
