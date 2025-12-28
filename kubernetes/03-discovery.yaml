@@ -16,6 +16,7 @@ spec:
       containers:
       - name: discovery
         image: 005783449450.dkr.ecr.us-east-1.amazonaws.com/sinistre/discovery:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8761
         env:

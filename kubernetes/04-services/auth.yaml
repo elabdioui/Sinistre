@@ -14,30 +14,30 @@ spec:
         app: service-auth
     spec:
       containers:
-      - name: service-auth
-        image: 005783449450.dkr.ecr.us-east-1.amazonaws.com/sinistre/auth:latest
-        ports:
-        - containerPort: 8091
-        env:
-        - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-          value: "http://discovery:8761/eureka/"
-        - name: SPRING_DATASOURCE_URL
-          value: "jdbc:postgresql://postgres:5432/authentification"
-        - name: SPRING_DATASOURCE_USERNAME
-          value: "postgres"
-        - name: SPRING_DATASOURCE_PASSWORD
-          value: "0000"
+        - name: service-auth
+          image: 005783449450.dkr.ecr.us-east-1.amazonaws.com/sinistre/auth:latest
+          ports:
+            - containerPort: 8091
+          env:
+            - name: eureka.client.service-url.defaultZone
+              value: "http://discovery:8761/eureka/"
+            - name: spring.datasource.url
+              value: "jdbc:postgresql://postgres:5432/authentification"
+            - name: spring.datasource.username
+              value: "postgres"
+            - name: spring.datasource.password
+              value: "0000"
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: service-auth
+  name: service-authentification
   namespace: insurance
 spec:
   selector:
     app: service-auth
   ports:
-  - port: 8091
-    targetPort: 8091
+    - port: 8091
+      targetPort: 8091
   type: ClusterIP
