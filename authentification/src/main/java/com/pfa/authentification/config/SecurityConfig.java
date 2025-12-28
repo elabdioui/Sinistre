@@ -1,6 +1,5 @@
 package com.pfa.authentification.config;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,47 +17,33 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
-    /**
-     * Configuration de la chaîne de filtres de sécurité
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // ❌ On enlève cors() ici, c'est géré par le Gateway
-                .csrf(csrf -> csrf.disable()) // Désactiver CSRF pour les APIs REST
+                // Activer CORS
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // Désactiver CSRF pour les APIs REST
+                .csrf(csrf -> csrf.disable())
+                // Session stateless
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Autoriser TOUTES les requêtes pour l'instant (pour debug)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/auth/register",
-                                "/auth/login",
-                                "/auth/health",
-                                "/auth/clients",
-                                "/auth/users",
-                                "/auth/users/**",
-                                "/actuator/**",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**"
-                        ).permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/**").permitAll()
                 );
 
         return http.build();
     }
 
-
-    /**
-     * Configuration CORS
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost:8080"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        // Autoriser toutes les origines
+        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
@@ -67,9 +52,6 @@ public class SecurityConfig {
         return source;
     }
 
-    /**
-     * Bean pour l'encodage des mots de passe
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
