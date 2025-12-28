@@ -1,43 +1,54 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: service-assurance
+  name: service-sinistre
   namespace: insurance
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: service-assurance
+      app: service-sinistre
   template:
     metadata:
       labels:
-        app: service-assurance
+        app: service-sinistre
     spec:
       containers:
-        - name: service-assurance
-          image: 005783449450.dkr.ecr.us-east-1.amazonaws.com/sinistre/assurance:latest
+        - name: service-sinistre
+          image: 005783449450.dkr.ecr.us-east-1.amazonaws.com/sinistre/sinistre:latest
+          imagePullPolicy: Always
           ports:
-            - containerPort: 8093
+            - containerPort: 8094
           env:
-            - name: eureka.client.service-url.defaultZone
+            - name: SPRING_CLOUD_CONFIG_ENABLED
+              value: "false"
+            - name: SPRING_CONFIG_IMPORT
+              value: ""
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
               value: "http://discovery:8761/eureka/"
-            - name: spring.datasource.url
-              value: "jdbc:postgresql://postgres:5432/service_assurance"
-            - name: spring.datasource.username
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres:5432/service_sinistre"
+            - name: SPRING_DATASOURCE_USERNAME
               value: "postgres"
-            - name: spring.datasource.password
+            - name: SPRING_DATASOURCE_PASSWORD
               value: "0000"
-
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "768Mi"
+              cpu: "500m"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: service-assurance
+  name: service-sinistre
   namespace: insurance
 spec:
   selector:
-    app: service-assurance
+    app: service-sinistre
   ports:
-    - port: 8093
-      targetPort: 8093
+    - port: 8094
+      targetPort: 8094
   type: ClusterIP

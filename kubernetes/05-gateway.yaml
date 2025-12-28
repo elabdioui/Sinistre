@@ -1,10 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-config
+  namespace: insurance
+data:
+  application.yml: |
+    spring:
+      application:
+        name: Api-Gateway
+      main:
+        web-application-type: reactive
+      cloud:
+        gateway:
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins: "*"
+                allowedMethods: "*"
+                allowedHeaders: "*"
+                allowCredentials: false
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+          routes:
+            - id: service-authentification
+              uri: lb://SERVICE-AUTHENTIFICATION
+              predicates:
+                - Path=/auth/**
+            - id: service-admin
+              uri: lb://SERVICE-ADMIN
+              predicates:
+                - Path=/admin/**
+            - id: service-assurance
+              uri: lb://SERVICE-ASSURANCE
+              predicates:
+                - Path=/contracts/**,/clients/**
+            - id: service-sinistre
+              uri: lb://SERVICE-SINISTRE
+              predicates:
+                - Path=/sinistres/**
+    server:
+      port: 8080
+    eureka:
+      client:
+        service-url:
+          defaultZone: http://discovery:8761/eureka/
+      instance:
+        prefer-ip-address: true
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: gateway,health,info,routes
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api-gateway
   namespace: insurance
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: api-gateway
@@ -20,9 +76,22 @@ spec:
         ports:
         - containerPort: 8080
         env:
-        - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-          value: "http://discovery:8761/eureka/"
-
+        - name: SPRING_CONFIG_LOCATION
+          value: "file:/config/application.yml"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "300m"
+      volumes:
+      - name: config-volume
+        configMap:
+          name: gateway-config
 ---
 apiVersion: v1
 kind: Service

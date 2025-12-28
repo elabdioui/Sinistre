@@ -1,39 +1,80 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { tap, switchMap, map } from 'rxjs/operators';
 
-export interface LoginResponse {
+interface AuthResponse {
   token: string;
-  userId?: number;
-  id?: number;
+  userId: number;
   email: string;
-  nom?: string;
-  prenom?: string;
-  role?: string;
-}
-
-export interface RegisterData {
-  nom: string;
-  prenom: string;
-  email: string;
-  password: string;
-  role?: string;
+  role: string;
+  username?: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8080/auth';
+
+  // ✅ MODIFIÉ: URL relative (le proxy nginx redirigera vers api-gateway)
+  private apiUrl = '/auth';
 
   constructor(private http: HttpClient) {}
 
-  register(user: RegisterData): Observable<any> {
+  register(user: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, user);
   }
 
-  login(credentials: { email?: string; username?: string; password: string }): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, credentials);
+  login(credentials: any): Observable<any> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
+      tap(response => {
+        console.log('🔑 AuthService - Réponse login complète:', response);
+
+        if (!response || !response.token) {
+          console.error('❌ Réponse invalide !');
+          throw new Error('Réponse du serveur invalide');
+        }
+
+        // Stocker le token
+        console.log('✅ Token trouvé');
+        localStorage.setItem('token', response.token);
+
+        // Stocker username, email, role
+        if (response.username) {
+          localStorage.setItem('username', response.username);
+        }
+
+        if (response.email) {
+          localStorage.setItem('userEmail', response.email);
+        }
+
+        if (response.role) {
+          localStorage.setItem('userRole', response.role);
+        }
+
+        // Si userId présent dans la réponse, le stocker directement
+        if (response.userId !== undefined && response.userId !== null) {
+          localStorage.setItem('userId', response.userId.toString());
+          console.log('✅ UserId stocké:', response.userId);
+        } else {
+          console.warn('⚠️ userId manquant dans la réponse - Extraction du token JWT');
+
+          // Extraire userId du token JWT (payload)
+          try {
+            const tokenParts = response.token.split('.');
+            if (tokenParts.length === 3) {
+              const payload = JSON.parse(atob(tokenParts[1]));
+              if (payload.userId) {
+                localStorage.setItem('userId', payload.userId.toString());
+                console.log('✅ UserId extrait du JWT:', payload.userId);
+              }
+            }
+          } catch (e) {
+            console.error('❌ Erreur extraction userId du JWT:', e);
+          }
+        }
+      })
+    );
   }
 
   isLoggedIn(): boolean {
@@ -53,17 +94,20 @@ export class AuthService {
   }
 
   getUserRole(): string | null {
-    const user = this.getUser();
-    return user?.role || null;
+    return localStorage.getItem('userRole');
   }
 
   getUserId(): number | null {
-    const user = this.getUser();
-    return user?.id || null;
+    const userId = localStorage.getItem('userId');
+    return userId ? parseInt(userId, 10) : null;
   }
 
   logout(): void {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('username');
   }
 }

@@ -8,8 +8,8 @@ import { Sinistre, CreateSinistreDTO, UpdateStatutDTO, StatutSinistre } from '..
   providedIn: 'root',
 })
 export class SinistreService {
-  
-  private readonly baseUrl = 'http://localhost:8080/sinistres';
+
+  private readonly baseUrl = '/sinistres';
 
   constructor(private http: HttpClient) {}
 

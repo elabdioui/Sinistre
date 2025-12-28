@@ -4,7 +4,7 @@ metadata:
   name: service-auth
   namespace: insurance
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: service-auth
@@ -16,18 +16,29 @@ spec:
       containers:
         - name: service-auth
           image: 005783449450.dkr.ecr.us-east-1.amazonaws.com/sinistre/auth:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8091
           env:
-            - name: eureka.client.service-url.defaultZone
+            - name: SPRING_CLOUD_CONFIG_ENABLED
+              value: "false"
+            - name: SPRING_CONFIG_IMPORT
+              value: ""
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
               value: "http://discovery:8761/eureka/"
-            - name: spring.datasource.url
+            - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://postgres:5432/authentification"
-            - name: spring.datasource.username
+            - name: SPRING_DATASOURCE_USERNAME
               value: "postgres"
-            - name: spring.datasource.password
+            - name: SPRING_DATASOURCE_PASSWORD
               value: "0000"
-
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "768Mi"
+              cpu: "500m"
 ---
 apiVersion: v1
 kind: Service
