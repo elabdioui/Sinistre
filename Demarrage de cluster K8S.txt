@@ -1,0 +1,51 @@
+# 1️⃣ Créer le namespace
+kubectl apply -f 01-namespace.yaml
+
+# 2️⃣ Déployer PostgreSQL
+kubectl apply -f 02-postgresql.yaml
+
+# 3️⃣ Attendre que PostgreSQL soit prêt (2 minutes)
+Start-Sleep -Seconds 120
+
+# 4️⃣ Créer les bases de données
+kubectl exec -it postgres-0 -n insurance -- psql -U postgres -c "CREATE DATABASE authentification;"
+kubectl exec -it postgres-0 -n insurance -- psql -U postgres -c "CREATE DATABASE service_admin;"
+kubectl exec -it postgres-0 -n insurance -- psql -U postgres -c "CREATE DATABASE service_assurance;"
+kubectl exec -it postgres-0 -n insurance -- psql -U postgres -c "CREATE DATABASE service_sinistre;"
+
+# 5️⃣ Déployer Eureka Discovery
+kubectl apply -f 03-discovery.yaml
+
+# 6️⃣ Attendre que Discovery soit prêt (1 minute)
+Start-Sleep -Seconds 60
+
+# 7️⃣ Déployer les services métier
+kubectl apply -f 04-services/auth.yaml
+kubectl apply -f 04-services/admin.yaml
+kubectl apply -f 04-services/assurance.yaml
+kubectl apply -f 04-services/sinistre.yaml
+
+# 8️⃣ Déployer Gateway et Frontend
+kubectl apply -f 05-gateway.yaml
+kubectl apply -f 06-frontend.yaml
+
+# 9️⃣ Vérifier le déploiement
+kubectl get all -n insurance
+
+# Voir tous les pods
+kubectl get pods -n insurance
+
+# Voir les services
+kubectl get svc -n insurance
+
+# Récupérer l'IP des nodes
+kubectl get nodes -o wide
+```
+
+---
+
+## 🌐 **ACCÈS**
+```
+Frontend: http://[NODE-IP]:30081
+Gateway: http://[NODE-IP]:30080
+Eureka: kubectl port-forward svc/discovery 8761:8761 -n insurance
